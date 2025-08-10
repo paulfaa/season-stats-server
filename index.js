@@ -28,6 +28,10 @@ let db;
   const userPassword = getSecret('user-password');
   const JWT_SECRET = getSecret('jwt-secret');
 
+  let cachedPlaylists = null;
+  let cacheTimestamp = 0;
+  const ONE_HOUR_IN_MS = 60 * 60 * 1000;
+
   if (process.env.NODE_ENV === 'DEV') {
     app.use(cors({
       origin: 'http://localhost:4200',
@@ -46,7 +50,6 @@ let db;
   app.post('/login', (req, res) => {
     const { password } = req.body;
     let role = null;
-
     if (password === adminPassword) {
       role = 'admin';
     } else if (password === userPassword) {
@@ -55,15 +58,12 @@ let db;
 
     if (role) {
       console.log('expires in:', JWT_EXPIRATION);
-
       const token = jwt.sign({ role }, JWT_SECRET, { expiresIn: JWT_EXPIRATION });
-
       res.status(200).json({
         success: true,
         role,
         token
       });
-
       console.log(`User logged in successfully as ${role}`);
     } else {
       res.status(401).json({ message: 'Unauthorized' });
@@ -104,10 +104,20 @@ let db;
 
 
   app.get('/playlists', async (req, res) => {
-    // add caching here
     try {
-      const playlists = await collection.find({}).toArray();
-      console.log(`Fetched ${playlists.length} playlists`);
+      const now = Date.now();
+
+      if (cachedPlaylists && (now - cacheTimestamp) < ONE_HOUR_IN_MS) {
+        console.log('Serving playlists from cache');
+        return res.status(200).json(cachedPlaylists);
+      }
+
+      const playlists = await collection.find({}).sort({ playlistDate: 1 }).toArray();
+      console.log(`Fetched ${playlists.length} playlists from DB`);
+
+      cachedPlaylists = playlists;
+      cacheTimestamp = now;
+
       res.status(200).json(playlists);
     } catch (err) {
       console.error('Error fetching playlists:', err);
@@ -141,6 +151,9 @@ let db;
         ],
         text: { format: zodTextFormat(parsedImageSchema, "result") },
       });
+      cachedPlaylists = null;
+      cacheTimestamp = 0;
+
       const result = response.output_parsed;
       res.status(200).json(result);
     }

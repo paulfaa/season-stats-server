@@ -13,7 +13,6 @@ async function connectToDb() {
       deprecationErrors: true,
     }
   });
-  console.log('URI:', uri);
   if (!db) {
     await mongoClient.connect();
     db = mongoClient.db('seasonStats');
