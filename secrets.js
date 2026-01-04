@@ -1,7 +1,7 @@
-import { SecretManagerServiceClient } from '@google-cloud/secret-manager';
+import { SecretManagerServiceClient } from "@google-cloud/secret-manager";
 
 const client = new SecretManagerServiceClient();
-const PROJECT_ID = 'seasonstats';
+const PROJECT_ID = "seasonstats";
 const secrets = {};
 
 async function loadSecret(secretName) {
@@ -9,17 +9,18 @@ async function loadSecret(secretName) {
     name: `projects/${PROJECT_ID}/secrets/${secretName}/versions/latest`,
   });
 
-  return version.payload.data.toString('utf8');
+  return version.payload.data.toString("utf8");
 }
 
 async function loadAllSecrets() {
   const secretNames = [
-    'user-password',
-    'admin-password',
-    'openai-api-key',
-    'jwt-secret',
-    'mongodb-password',
-    'mongodb-uri',
+    "user-password",
+    "admin-password",
+    "openai-api-key",
+    "jwt-secret",
+    "mongodb-password",
+    "mongodb-uri",
+    "service-account-key",
   ];
 
   for (const name of secretNames) {

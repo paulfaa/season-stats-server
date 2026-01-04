@@ -14,6 +14,7 @@ const playlistSchema = z.object({
   uploadDate: z.string().min(1),
   uploadedBy: z.string().min(1),
   players: z.array(playerSchema).nonempty(),
+  imageUrl: z.string().url().optional(),
 });
 
 const parsedImageSchema = z.object({
