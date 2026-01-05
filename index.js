@@ -215,8 +215,7 @@ let db;
             .json({ error: "Playlist for this date already exists." });
         }
 
-        // If an image was uploaded, upload it to Google Drive
-        if (req.file) {
+        if (req.file && req.file.buffer && req.file.buffer.length > 0) {
           try {
             const fileName = parseResult.data.playlistDate;
             const imageUrl = await uploadToCloudStorage(
@@ -225,9 +224,12 @@ let db;
               req.file.mimetype
             );
             parseResult.data.imageUrl = imageUrl;
-            console.log(`Image uploaded to Google Drive: ${imageUrl}`);
+            console.log(`Image uploaded to Google Cloud Storage: ${imageUrl}`);
           } catch (driveError) {
-            console.error("Error uploading to Google Drive:", driveError);
+            console.error(
+              "Error uploading to Google Cloud Storage:",
+              driveError
+            );
             // Continue without the image URL rather than failing the entire save
           }
         }
